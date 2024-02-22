@@ -1,4 +1,4 @@
-import { useRouter } from 'next/router'
+import { useLocalStorage } from '@/src/hooks/useLocalStorage'
 
 import {
   DEFAULT_LOCALE,
@@ -32,7 +32,7 @@ export const navigatorLocale = () => {
 }
 
 export const useActiveLocale = () => {
-  const { locale } = useRouter()
+  const [language] = useLocalStorage('locale', null)
 
-  return locale || navigatorLocale() || DEFAULT_LOCALE
+  return language || DEFAULT_LOCALE
 }

@@ -4,21 +4,20 @@ import {
   useState
 } from 'react'
 
-import { useRouter } from 'next/router'
-
 import ChevronDownArrowIcon from '@/icons/ChevronDownArrowIcon'
 import SearchLanguageIcon from '@/icons/SearchLanguageIcon'
 import SelectedCircleIcon from '@/icons/SelectedCircleIcon'
 import GlobeLogo from '@/lib/connect-wallet/components/logos/Globe'
 import { DEBOUNCE_TIMEOUT } from '@/src/config/constants'
 import {
+  DEFAULT_LOCALE,
   languageKey,
   localesKey
 } from '@/src/config/locales'
 import { useDebounce } from '@/src/hooks/useDebounce'
 import { useLocalStorage } from '@/src/hooks/useLocalStorage'
+import { dynamicActivate } from '@/src/i18n/dynamic-activate'
 import { classNames } from '@/utils/classnames'
-import { getBrowserLocale } from '@/utils/locale'
 import {
   Listbox,
   Transition
@@ -27,7 +26,7 @@ import { t } from '@lingui/macro'
 import { useLingui } from '@lingui/react'
 
 const LANGUAGES = Object.values(languageKey)
-const LANGUAGE_KEYS = Object.keys(languageKey)
+// const LANGUAGE_KEYS = Object.keys(languageKey)
 
 /**
  * @param {object} props
@@ -35,27 +34,26 @@ const LANGUAGE_KEYS = Object.keys(languageKey)
  * @returns
  */
 export const LanguageDropdown = (props) => {
-  const router = useRouter()
   const [searchValue, setSearchValue] = useState('')
 
-  const [language, setLanguage] = useLocalStorage('locale', null)
+  const [language, setLanguage] = useLocalStorage('locale', DEFAULT_LOCALE)
 
-  useEffect(() => {
-    const browserLocale = getBrowserLocale().replace(/-.*/, '')
-    if (
-      !language &&
-      LANGUAGE_KEYS.includes(browserLocale) &&
-      router.locale !== browserLocale
-    ) {
-      router.push(router.asPath, router.asPath, { locale: browserLocale })
+  // useEffect(() => {
+  //   const browserLocale = getBrowserLocale().replace(/-.*/, '')
+  //   if (
+  //     !language &&
+  //     LANGUAGE_KEYS.includes(browserLocale) &&
+  //     router.locale !== browserLocale
+  //   ) {
+  //     router.push(router.asPath, router.asPath, { locale: browserLocale })
 
-      return
-    }
+  //     return
+  //   }
 
-    if (LANGUAGE_KEYS.includes(language) && router.locale !== language) {
-      router.push(router.asPath, router.asPath, { locale: language })
-    }
-  }, [language, router])
+  //   if (LANGUAGE_KEYS.includes(language) && router.locale !== language) {
+  //     router.push(router.asPath, router.asPath, { locale: language })
+  //   }
+  // }, [language, router])
 
   const [languages, setLanguages] = useState(LANGUAGES)
   const debouncedSearch = useDebounce(searchValue, DEBOUNCE_TIMEOUT)
@@ -73,9 +71,15 @@ export const LanguageDropdown = (props) => {
 
   const handleOnChangeLanguage = (value) => {
     setLanguage(localesKey[value])
-    router.push(router.asPath, router.asPath, {
-      locale: localesKey[value]
-    })
+
+    dynamicActivate(localesKey[value])
+      .then(() => {})
+      .catch((error) => { return console.error('Failed to activate locale', localesKey[value], error) })
+
+    setSearchValue('')
+    // router.push(router.asPath, router.asPath, {
+    //   locale: localesKey[value]
+    // })
   }
 
   const handleSearchLanguage = (e) => {
@@ -87,7 +91,7 @@ export const LanguageDropdown = (props) => {
   return (
     <div className='relative flex items-center mt-3 cursor-pointer'>
       <Listbox
-        value={languageKey[router.locale]}
+        value={languageKey[language]}
         onChange={handleOnChangeLanguage}
       >
         {
@@ -102,7 +106,7 @@ export const LanguageDropdown = (props) => {
                   <div className='flex items-center gap-1 text-xs text-white'>
                     <GlobeLogo />
                     <span>
-                      {languageKey[router.locale]?.split('-')[0]}
+                      {languageKey[language]?.split('-')[0]}
                     </span>
                     <ChevronDownArrowIcon aria-hidden='true' />
                   </div>
